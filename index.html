@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#c9a67a;-webkit-font-smoothing:antialiased}a{color:#2a1f17}a:hover{color:#8a3a22}</style>
+</helmet>
+<div style="min-height:100vh;background:#c9a67a;display:flex;justify-content:center;padding:28px 16px 48px;box-sizing:border-box;font-family:'IBM Plex Sans',sans-serif;color:#2a1f17">
+  <div style="width:100%;max-width:520px;display:flex;flex-direction:column;gap:20px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase">Brot-Beilage · Buchausgabe</div>
+    <h1 style="font-family:'Instrument Serif',serif;font-weight:400;font-size:46px;line-height:1.02;margin:0;text-wrap:pretty">Hallo {{ name }}, welches Buch soll zum Brot?</h1>
+    <p style="margin:0;font-size:16px;line-height:1.5;text-wrap:pretty">Wir haben schon mal was vorausgewählt. Wenn's nicht passt: einfach umentscheiden. Krümel im Buch sind ausdrücklich erlaubt.</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ books }}" as="b" hint-placeholder-count="6">
+        <button onClick="{{ b.pick }}" style="all:unset;cursor:pointer;display:grid;grid-template-columns:52px minmax(0,1fr) 28px;gap:14px;align-items:center;background:#f7f2e8;padding:12px 14px;border-radius:6px;border:2px solid {{ b.border }};box-sizing:border-box">
+          <div style="position:relative;overflow:hidden;width:52px;height:78px;background:{{ b.color }};border-radius:2px 4px 4px 2px;box-shadow:inset 3px 0 0 rgba(0,0,0,0.25),0 3px 8px rgba(40,25,10,0.25);display:flex;align-items:flex-end;padding:5px;box-sizing:border-box;color:#f7f2e8;font-family:'Instrument Serif',serif;font-size:10px;line-height:1">{{ b.title }}<img src="{{ b.img }}" alt="" onError="{{ b.onErr }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:{{ b.imgDisplay }}"></div>
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+            <div style="font-family:'Instrument Serif',serif;font-size:22px;line-height:1.1">{{ b.title }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;opacity:0.75">{{ b.author }}</div>
+            <div style="font-size:14px;line-height:1.4;text-wrap:pretty">{{ b.line }}</div>
+          </div>
+          <div style="width:24px;height:24px;border-radius:50%;border:2px solid #2a1f17;display:flex;align-items:center;justify-content:center;box-sizing:border-box">
+            <div style="width:12px;height:12px;border-radius:50%;background:#8a3a22;opacity:{{ b.dot }}"></div>
+          </div>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;background:#f7f2e8;padding:14px;border-radius:6px">
+      <label style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase">Oder ganz was anderes?</label>
+      <input value="{{ custom }}" onChange="{{ onCustom }}" placeholder="Titel / Autor:in eintippen" style="font:inherit;font-size:16px;padding:10px 12px;border:1.5px solid #2a1f17;border-radius:4px;background:#fffdf8;color:#2a1f17;outline:none">
+    </div>
+    <div style="font-size:14px;line-height:1.45;text-align:center">Deine Wahl: <strong>{{ choice }}</strong></div>
+    <sc-if value="{{ notSent }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ send }}" disabled="{{ sending }}" style="all:unset;cursor:pointer;display:flex;justify-content:center;align-items:center;min-height:56px;background:#2a1f17;color:#f7f2e8;border-radius:6px;font-weight:600;font-size:17px" style-hover="background:#8a3a22">{{ buttonLabel }}</button>
+    </sc-if>
+    <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;background:#f7f2e8;border:2px solid #8a3a22;border-radius:6px;padding:18px">
+        <div style="font-family:'Instrument Serif',serif;font-size:30px;line-height:1.05">Angekommen!</div>
+        <div style="font-size:15px;line-height:1.45;text-wrap:pretty">Wir besorgen das Buch. Bis dahin: Brot genießen.</div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ failed }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:14px;line-height:1.45;text-align:center">Hat nicht geklappt. <a href="{{ mailLink }}">Stattdessen per Mail schicken</a></div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;empfaengerEmail&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;nitrit.methyl.6y@icloud.com&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  books = [
+    { id: 'schwarm', title: 'Der Schwarm', author: 'Frank Schätzing', line: 'Rund um den Globus passieren im Meer seltsame Dinge, und niemand weiß, warum. Ein packender Öko-Thriller aus der Tiefsee. Lieber nicht beim Fischbrötchen lesen.', color: 'oklch(0.34 0.07 230)' },
+    { id: 'stadt', title: 'In einer kleinen Stadt', author: 'Stephen King', line: 'In Castle Rock eröffnet ein Laden, in dem jeder genau das findet, was er sich wünscht. Bezahlt wird mit kleinen Gefälligkeiten, und die haben es in sich. Unser Gutschein hat keinen Haken.', color: 'oklch(0.32 0.09 25)' },
+    { id: 'harari', title: 'Eine kurze Geschichte der Menschheit', author: 'Yuval Noah Harari', line: 'Vom Faustkeil bis zum Smartphone: wie der Homo sapiens die Welt erobert hat. Spoiler: Der Ackerbau, also auch das Brot, war schuld.', color: 'oklch(0.45 0.1 50)' },
+    { id: 'prinz', title: 'Der kleine Prinz', author: 'Antoine de Saint-Exupéry', line: 'Ein Pilot strandet in der Wüste und trifft einen kleinen Prinzen von einem fernen Asteroiden. Man sieht nur mit dem Herzen gut.', color: 'oklch(0.36 0.07 250)' },
+    { id: 'cafe', title: 'Das Café am Rande der Welt', author: 'John Strelecky', line: 'Ein gestresster Manager verirrt sich in ein Café, wo auf der Speisekarte drei Fragen nach dem Sinn des Lebens stehen. Brot gibt’s dort vermutlich auch.', color: 'oklch(0.4 0.08 160)' },
+    { id: 'verblendung', title: 'Verblendung', author: 'Stieg Larsson', line: 'Band 1 der Millennium-Reihe: Journalist Mikael Blomkvist und Hackerin Lisbeth Salander suchen eine seit 40 Jahren verschwundene Industriellenerbin.', color: 'oklch(0.28 0.03 260)' }
+  ];
+  state = { sel: null, custom: '', broken: {} };
+  componentDidMount() {
+    const p = new URLSearchParams(location.search);
+    const f = p.get('fuer');
+    this.setState({ sel: f === '2' ? 'stadt' : 'schwarm', name: p.get('name') });
+  }
+  renderVals() {
+    const { sel, custom } = this.state;
+    const name = this.state.name || 'du';
+    const book = this.books.find(b => b.id === sel);
+    const choice = custom.trim() ? custom.trim() : (book ? `${book.title} (${book.author})` : '…');
+    const email = this.props.empfaengerEmail || 'nitrit.methyl.6y@icloud.com';
+    const who = this.state.name || 'Jemand';
+    const subject = `Buchwahl: ${who}`;
+    const text = `${who} hätte zum Brot gern: ${choice}`;
+    const status = this.state.status;
+    return {
+      name,
+      custom,
+      choice,
+      onCustom: e => this.setState({ custom: e.target.value }),
+      notSent: status !== 'sent',
+      sent: status === 'sent',
+      failed: status === 'error',
+      sending: status === 'sending',
+      buttonLabel: status === 'sending' ? 'Wird abgeschickt …' : 'Auswahl abschicken',
+      mailLink: `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`,
+      send: async () => {
+        if (!email) { this.setState({ status: 'error' }); return; }
+        this.setState({ status: 'sending' });
+        try {
+          const r = await fetch(`https://formsubmit.co/ajax/${email}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ _subject: subject, _template: 'box', name: who, buch: choice })
+          });
+          const j = await r.json();
+          this.setState({ status: r.ok && String(j.success) === 'true' ? 'sent' : 'error' });
+        } catch (e) { this.setState({ status: 'error' }); }
+      },
+      books: this.books.map(b => {
+        const on = !custom.trim() && b.id === sel;
+        return { ...b, img: `covers/${b.id}.${b.id === 'schwarm' ? 'avif' : 'jpg'}`, imgDisplay: this.state.broken[b.id] ? 'none' : 'block', onErr: () => this.setState(s => ({ broken: { ...s.broken, [b.id]: true } })), border: on ? '#8a3a22' : 'transparent', dot: on ? 1 : 0, pick: () => this.setState({ sel: b.id, custom: '' }) };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
