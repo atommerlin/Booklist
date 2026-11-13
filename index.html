@@ -48,7 +48,7 @@
       </div>
     </sc-if>
     <sc-if value="{{ failed }}" hint-placeholder-val="{{ false }}">
-      <div style="font-size:14px;line-height:1.45;text-align:center">Hat nicht geklappt. <a href="{{ mailLink }}">Stattdessen per Mail schicken</a></div>
+      <div style="font-size:14px;line-height:1.45;text-align:center">Hat nicht geklappt. <a href="{{ mailLink }}">Stattdessen per Mail schicken</a><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.7;margin-top:6px">{{ errMsg }}</div></div>
     </sc-if>
   </div>
 </div>
@@ -87,6 +87,7 @@ class Component extends DCLogic {
       notSent: status !== 'sent',
       sent: status === 'sent',
       failed: status === 'error',
+      errMsg: this.state.errMsg || '',
       sending: status === 'sending',
       buttonLabel: status === 'sending' ? 'Wird abgeschickt …' : 'Auswahl abschicken',
       mailLink: `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`,
@@ -100,8 +101,9 @@ class Component extends DCLogic {
             body: JSON.stringify({ _subject: subject, _template: 'box', name: who, buch: choice })
           });
           const j = await r.json();
-          this.setState({ status: r.ok && String(j.success) === 'true' ? 'sent' : 'error' });
-        } catch (e) { this.setState({ status: 'error' }); }
+          const ok = r.ok && String(j.success) === 'true';
+          this.setState({ status: ok ? 'sent' : 'error', errMsg: ok ? '' : (j.message || `Fehler ${r.status}`) });
+        } catch (e) { this.setState({ status: 'error', errMsg: String(e.message || e) }); }
       },
       books: this.books.map(b => {
         const on = !custom.trim() && b.id === sel;
