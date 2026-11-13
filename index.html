@@ -53,7 +53,7 @@
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;empfaengerEmail&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;nitrit.methyl.6y@icloud.com&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;empfaengerEmail&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;nitrit.methyl.6y@icloud.com&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;web3formsKey&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
 class Component extends DCLogic {
   books = [
     { id: 'schwarm', title: 'Der Schwarm', author: 'Frank Schätzing', line: 'Rund um den Globus passieren im Meer seltsame Dinge, und niemand weiß, warum. Ein packender Öko-Thriller aus der Tiefsee. Lieber nicht beim Fischbrötchen lesen.', color: 'oklch(0.34 0.07 230)' },
@@ -92,13 +92,13 @@ class Component extends DCLogic {
       buttonLabel: status === 'sending' ? 'Wird abgeschickt …' : 'Auswahl abschicken',
       mailLink: `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`,
       send: async () => {
-        if (!email) { this.setState({ status: 'error' }); return; }
+        const key = this.props.web3formsKey || '7a3b150f-1abb-4632-93ef-907c03f43b61';
         this.setState({ status: 'sending' });
         try {
-          const r = await fetch(`https://formsubmit.co/ajax/${email}`, {
+          const r = await fetch('https://api.web3forms.com/submit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-            body: JSON.stringify({ _subject: subject, _template: 'box', name: who, buch: choice })
+            body: JSON.stringify({ access_key: key, subject, from_name: 'Brot-Buchwahl', name: who, buch: choice })
           });
           const j = await r.json();
           const ok = r.ok && String(j.success) === 'true';
